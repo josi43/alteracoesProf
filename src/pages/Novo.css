@@ -28,7 +28,7 @@
 .movie {
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
   width: 250px;
-  background-color: #f8f8f8;
+  background-color: #00ff5f;
   margin: 1rem;
   border-radius: 5px;
   box-sizing: border-box;
@@ -36,6 +36,15 @@
   position: relative;
   display: flex;
   flex-direction: column;
+}
+.filmes {
+  background-color: #00ff5f;
+  margin: 8px;
+  padding: 8px;
+  width: 12rem;
+}
+.filmes:hover {
+  background-color:#2b4e37;
 }
 
 .movie .poster {
@@ -75,4 +84,8 @@
 .search-container {
   display: flex;
   align-items: center;
+}
+.verde {
+  background-color: #00ff5f;
+  margin: 1rem;
 }

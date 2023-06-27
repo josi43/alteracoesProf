@@ -12,8 +12,12 @@ import {
 } from "firebase/firestore";
 import "./Carousel.css";
 import UserContext from "../contexts/UserContext";
+let API_KEY = "?api_key=05995eed7f3a97b0cd7a4e59fe90ad97";
+let BASE_URL = "https://api.themoviedb.org/3";
+let url = BASE_URL + "/movie/popular" + API_KEY;
+let img_path = "https://image.tmdb.org/t/p/w500";
 
-const App = () => {
+const App = (movie) => {
   const { userId } = useContext(UserContext);
   const [filmes, setFilmes] = useState([]);
   const [watchedMovies, setWatchedMovies] = useState([]);
@@ -160,15 +164,16 @@ const App = () => {
           value={watchedMovieRating}
           onChange={(e) => setWatchedMovieRating(e.target.value)}
         />
-        <button onClick={handleAddWatchedMovie}>Adicionar</button>
+        <button className="verde" onClick={handleAddWatchedMovie}>Adicionar</button>
+
       </div>
       <div className="movies-container">
         <h2>Filmes Assistidos</h2>
         {watchedMovies.map((movie) => (
-          <div className="movie" key={movie.id}>
+          <div className="movie filmes" key={movie.id}>
             <span>{movie.name}</span>
             <span className="rating">Nota: {movie.rating}</span>
-            <button onClick={() => handleDeleteWatchedMovie(movie.id)}>
+            <button  onClick={() => handleDeleteWatchedMovie(movie.id)}>
               Excluir
             </button>
           </div>
@@ -193,12 +198,12 @@ const App = () => {
             </option>
           ))}
         </select>
-        <button onClick={handleAddWatchlistMovie}>Adicionar</button>
+        <button className="verde" onClick={handleAddWatchlistMovie}>Adicionar</button>
       </div>
       <div className="movies-container">
         <h2>Filmes para Assistir</h2>
         {watchlistMovies.map((movie) => (
-          <div className="movie" key={movie.id}>
+          <div className="movie filmes" key={movie.id}>
             <span>{movie.name}</span>
             <span className="platforms">Plataforma: {movie.streamingPlatform}</span>
             <button onClick={() => handleDeleteWatchlistMovie(movie.id)}>

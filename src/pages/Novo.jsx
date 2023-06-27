@@ -27,7 +27,6 @@ export default function Novo() {
       })
       .catch((error) => {
         console.error(error);
-        // Tratar o erro de acordo com sua necessidade
       });
   }, [url_set]);
 
