@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import "./Carousel.css";
 import UserContext from "../contexts/UserContext";
+
 let API_KEY = "?api_key=05995eed7f3a97b0cd7a4e59fe90ad97";
 let BASE_URL = "https://api.themoviedb.org/3";
 let url = BASE_URL + "/movie/popular" + API_KEY;
@@ -24,14 +25,18 @@ const App = (movie) => {
   const [watchlistMovies, setWatchlistMovies] = useState([]);
   const [watchedMovieName, setWatchedMovieName] = useState("");
   const [watchedMovieRating, setWatchedMovieRating] = useState("");
+  const [watchedMovieRatingError, setWatchedMovieRatingError] = useState("");
+  const [watchedMovieRatingConfirmation, setWatchedMovieRatingConfirmation] = useState("");
   const [watchlistMovieName, setWatchlistMovieName] = useState("");
   const [streamingPlatform, setStreamingPlatform] = useState("");
+  const [watchlistMovieError, setWatchlistMovieError] = useState("");
+  const [watchlistMovieConfirmation, setWatchlistMovieConfirmation] = useState("");
 
   const db = getFirestore(app);
   const filmesCollection = collection(db, "filmes");
 
   useEffect(() => {
-    const getFilmes = async () => {
+    const fetchMovies = async () => {
       if (!userId) {
         setFilmes([]);
         setWatchedMovies([]);
@@ -48,12 +53,8 @@ const App = (movie) => {
           id: doc.id,
         }));
 
-        const watchedFilmes = allFilmes.filter(
-          (filme) => filme.type === "watched"
-        );
-        const watchlistFilmes = allFilmes.filter(
-          (filme) => filme.type === "watchlist"
-        );
+        const watchedFilmes = allFilmes.filter((filme) => filme.type === "watched");
+        const watchlistFilmes = allFilmes.filter((filme) => filme.type === "watchlist");
 
         setFilmes(allFilmes);
         setWatchedMovies(watchedFilmes);
@@ -63,14 +64,52 @@ const App = (movie) => {
       }
     };
 
-    getFilmes();
+    fetchMovies();
   }, [userId]);
+
+  const fetchMovies = async () => {
+    if (!userId) {
+      setFilmes([]);
+      setWatchedMovies([]);
+      setWatchlistMovies([]);
+      return;
+    }
+
+    const q = query(filmesCollection, where("userId", "==", userId));
+
+    try {
+      const data = await getDocs(q);
+      const allFilmes = data.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id,
+      }));
+
+      const watchedFilmes = allFilmes.filter((filme) => filme.type === "watched");
+      const watchlistFilmes = allFilmes.filter((filme) => filme.type === "watchlist");
+
+      setFilmes(allFilmes);
+      setWatchedMovies(watchedFilmes);
+      setWatchlistMovies(watchlistFilmes);
+    } catch (error) {
+      console.error("Erro ao obter filmes: ", error);
+    }
+  };
 
   const handleAddWatchedMovie = async () => {
     if (watchedMovieName.trim() === "" || watchedMovieRating.trim() === "") {
-      alert("Por favor, preencha todos os campos.");
+      setWatchedMovieRatingError("Por favor, preencha todos os campos.");
       return;
     }
+
+    const rating = parseInt(watchedMovieRating);
+
+    if (rating < 1 || rating > 10) {
+      setWatchedMovieRatingError("A nota do filme deve estar entre 1 e 10.");
+      return;
+    }
+
+    setWatchedMovieRatingError("");
+    setWatchedMovieRatingConfirmation(""); // Limpa a mensagem de confirmação
 
     const newMovie = {
       name: watchedMovieName,
@@ -83,28 +122,40 @@ const App = (movie) => {
       await addDoc(filmesCollection, newMovie);
       setWatchedMovies((prevMovies) => [...prevMovies, { ...newMovie }]);
       setWatchedMovieName("");
-      setWatchedMovieRating("");
-      alert("Filme assistido adicionado com sucesso!");
+      setWatchedMovieRatingConfirmation("Filme assistido adicionado com sucesso!");
+
+      fetchMovies();
     } catch (error) {
       console.error("Erro ao adicionar filme assistido: ", error);
     }
   };
 
   const handleDeleteWatchedMovie = async (id) => {
+    const confirmed = window.confirm("Tem certeza de que deseja excluir este filme assistido?");
+  
+    if (!confirmed) {
+      return;
+    }
+  
     try {
       await deleteDoc(doc(db, "filmes", id));
       setWatchedMovies((prevMovies) =>
         prevMovies.filter((movie) => movie.id !== id)
       );
-      alert("Filme assistido excluído com sucesso!");
+      setWatchedMovieRatingConfirmation("Filme assistido excluído com sucesso!");
+      setWatchedMovieRatingError(""); // Clear any previous error message
+  
+      fetchMovies();
     } catch (error) {
       console.error("Erro ao excluir filme assistido: ", error);
     }
   };
 
   const handleAddWatchlistMovie = async () => {
+    setWatchlistMovieError(""); // Clear the movie name inputfield
+
     if (watchlistMovieName.trim() === "" || streamingPlatform.trim() === "") {
-      alert("Por favor, preencha todos os campos.");
+      setWatchlistMovieError("Por favor, preencha todos os campos.");
       return;
     }
 
@@ -120,21 +171,33 @@ const App = (movie) => {
       setWatchlistMovies((prevMovies) => [...prevMovies, { ...newMovie }]);
       setWatchlistMovieName("");
       setStreamingPlatform("");
-      alert("Filme para assistir adicionado com sucesso!");
+      setWatchlistMovieConfirmation("Filme para assistir adicionado com sucesso!");
+
+      fetchMovies();
     } catch (error) {
       console.error("Erro ao adicionar filme para assistir: ", error);
     }
   };
 
   const handleDeleteWatchlistMovie = async (id) => {
+    const confirmed = window.confirm("Tem certeza de que deseja excluir este filme da lista de filmes para assistir?");
+    setWatchlistMovieConfirmation('')
+  
+    if (!confirmed) {
+      return;
+    }
+  
     try {
       await deleteDoc(doc(db, "filmes", id));
       setWatchlistMovies((prevMovies) =>
         prevMovies.filter((movie) => movie.id !== id)
       );
-      alert("Filme para assistir excluído com sucesso!");
+      setWatchlistMovieConfirmation("Filme da lista de filmes para assistir excluído com sucesso!");
+      setWatchlistMovieError(""); // Clear the movie name inputfield
+
+      fetchMovies();
     } catch (error) {
-      console.error("Erro ao excluir filme para assistir: ", error);
+      console.error("Erro ao excluir filme da lista de filmes para assistir: ", error);
     }
   };
 
@@ -149,6 +212,7 @@ const App = (movie) => {
   ];
 
   return (
+    
     <div className="container">
       <div className="inputs-container">
         <h2>Filmes Assistidos</h2>
@@ -164,8 +228,15 @@ const App = (movie) => {
           value={watchedMovieRating}
           onChange={(e) => setWatchedMovieRating(e.target.value)}
         />
-        <button className="verde" onClick={handleAddWatchedMovie}>Adicionar</button>
-
+        {watchedMovieRatingError && (
+          <p className="error-message">{watchedMovieRatingError}</p>
+        )}
+        {watchedMovieRatingConfirmation && !watchedMovieRatingError && (
+          <p className="confirmation-message">{watchedMovieRatingConfirmation}</p>
+        )}
+        <button className="verde" onClick={handleAddWatchedMovie}>
+          Adicionar
+        </button>
       </div>
       <div className="movies-container">
         <h2>Filmes Assistidos</h2>
@@ -173,7 +244,7 @@ const App = (movie) => {
           <div className="movie filmes" key={movie.id}>
             <span>{movie.name}</span>
             <span className="rating">Nota: {movie.rating}</span>
-            <button  onClick={() => handleDeleteWatchedMovie(movie.id)}>
+            <button onClick={() => handleDeleteWatchedMovie(movie.id)}>
               Excluir
             </button>
           </div>
@@ -198,7 +269,15 @@ const App = (movie) => {
             </option>
           ))}
         </select>
-        <button className="verde" onClick={handleAddWatchlistMovie}>Adicionar</button>
+        {watchlistMovieError && (
+          <p className="error-message">{watchlistMovieError}</p>
+        )}
+        {watchlistMovieConfirmation && !watchlistMovieError &&(
+          <p className="confirmation-message">{watchlistMovieConfirmation}</p>
+        )}
+        <button className="verde" onClick={handleAddWatchlistMovie}>
+          Adicionar
+        </button>
       </div>
       <div className="movies-container">
         <h2>Filmes para Assistir</h2>
@@ -211,6 +290,9 @@ const App = (movie) => {
             </button>
           </div>
         ))}
+      </div>
+      <div className="inputs-container">
+        <p><span>Dica: </span>Aqui você tem a liberdade de adicionar o título que quiser. Se esta com dúvidas com o nome, navegue para a aba e procure o nome correto do filme</p>
       </div>
     </div>
   );
