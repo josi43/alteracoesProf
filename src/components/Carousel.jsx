@@ -229,10 +229,10 @@ const App = (movie) => {
           onChange={(e) => setWatchedMovieRating(e.target.value)}
         />
         {watchedMovieRatingError && (
-          <p className="error-message">{watchedMovieRatingError}</p>
+          <p className="erro">{watchedMovieRatingError}</p>
         )}
         {watchedMovieRatingConfirmation && !watchedMovieRatingError && (
-          <p className="confirmation-message">{watchedMovieRatingConfirmation}</p>
+          <p className="erro">{watchedMovieRatingConfirmation}</p>
         )}
         <button className="verde" onClick={handleAddWatchedMovie}>
           Adicionar
@@ -270,10 +270,10 @@ const App = (movie) => {
           ))}
         </select>
         {watchlistMovieError && (
-          <p className="error-message">{watchlistMovieError}</p>
+          <p className="erro">{watchlistMovieError}</p>
         )}
         {watchlistMovieConfirmation && !watchlistMovieError &&(
-          <p className="confirmation-message">{watchlistMovieConfirmation}</p>
+          <p className="erro">{watchlistMovieConfirmation}</p>
         )}
         <button className="verde" onClick={handleAddWatchlistMovie}>
           Adicionar
@@ -292,7 +292,8 @@ const App = (movie) => {
         ))}
       </div>
       <div className="inputs-container">
-        <p><span>Dica: </span>Aqui você tem a liberdade de adicionar o título que quiser. Se esta com dúvidas com o nome, navegue para a aba e procure o nome correto do filme</p>
+        <p><span>Dica: </span>Aqui você tem a liberdade de adicionar o título que quiser! Se esta com dúvidas sobre o nome,
+         navegue para a aba "Filmes" e procure o nome correto do filme.</p>
       </div>
     </div>
   );
